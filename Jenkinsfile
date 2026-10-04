@@ -21,8 +21,10 @@ pipeline {
             steps {
                 echo 'Deploiement sur le cluster Kubernetes'
                 sh 'minikube image load flask:latest'
+                sh 'minikube ssh -- sudo crictl images | grep flask'
                 sh 'kubectl apply -f manifests/'
-                sh 'kubectl rollout status deployment/flask-app --timeout=120s'
+                sh 'kubectl rollout restart deployment/flask-app'
+                sh 'kubectl rollout status deployment/flask-app --timeout=300s'
             }
         }
     }
