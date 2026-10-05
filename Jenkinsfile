@@ -11,18 +11,17 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo 'Construction de l image dans le demon Docker du cluster'
-                sh '''
-                    eval $(minikube docker-env)
-                    docker build -t flask:${BUILD_NUMBER} -t flask:latest .
-                    docker image ls | grep flask
-                '''
+                echo 'Construction de l image Docker'
+                sh 'docker build -t flask:${BUILD_NUMBER} -t flask:latest .'
+                sh 'docker image ls | grep flask'
             }
         }
 
         stage('Deploy') {
             steps {
                 echo 'Deploiement sur le cluster Kubernetes'
+                sh 'minikube image load flask:latest'
+                sh 'minikube ssh -- sudo crictl images | grep flask'
                 sh 'kubectl apply -f manifests/'
                 sh 'kubectl rollout restart deployment/flask-app'
                 sh 'kubectl rollout status deployment/flask-app --timeout=300s'
@@ -31,6 +30,9 @@ pipeline {
     }
 
     post {
+        always {
+            sh 'docker image prune -f'
+        }
         success {
             echo 'Pipeline termine avec succes'
         }
