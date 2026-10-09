@@ -23,7 +23,9 @@ pipeline {
                 script {
                     def scannerHome = tool 'SonarScanner'
                     withSonarQubeEnv('SonarQube') {
-                        sh "${scannerHome}/bin/sonar-scanner"
+                        sh 'echo "URL du serveur : $SONAR_HOST_URL"'
+                        sh 'echo "Jeton transmis : ${SONAR_AUTH_TOKEN:+oui}${SONAR_AUTH_TOKEN:-non}"'
+                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.token=\$SONAR_AUTH_TOKEN"
                     }
                 }
             }
@@ -33,7 +35,6 @@ pipeline {
             steps {
                 echo 'Deploiement sur le cluster Kubernetes'
                 sh 'minikube image load flask:latest'
-                sh 'minikube ssh -- sudo crictl images | grep flask'
                 sh 'kubectl apply -f manifests/'
                 sh 'kubectl rollout restart deployment/flask-app'
                 sh 'kubectl rollout status deployment/flask-app --timeout=300s'
