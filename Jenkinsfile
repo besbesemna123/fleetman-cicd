@@ -17,6 +17,18 @@ pipeline {
             }
         }
 
+        stage('Analyse SonarQube') {
+            steps {
+                echo 'Analyse de la qualite du code'
+                script {
+                    def scannerHome = tool 'SonarScanner'
+                    withSonarQubeEnv('SonarQube') {
+                        sh "${scannerHome}/bin/sonar-scanner"
+                    }
+                }
+            }
+        }
+
         stage('Deploy') {
             steps {
                 echo 'Deploiement sur le cluster Kubernetes'
